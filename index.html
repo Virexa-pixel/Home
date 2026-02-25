@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virexa - 3D Art Canvas</title>
+  
+  <!-- Tailwind CSS for Styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    /* 3D and Animations */
+    .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    
+    /* Drifting Orbs for Background Depth */
+    @keyframes blob {
+      0% { transform: translate(0px, 0px) scale(1); }
+      33% { transform: translate(40px, -60px) scale(1.1); }
+      66% { transform: translate(-30px, 30px) scale(0.9); }
+      100% { transform: translate(0px, 0px) scale(1); }
+    }
+    .animate-blob { animation: blob 15s infinite alternate ease-in-out; }
+    .animation-delay-2000 { animation-delay: 2s; }
+    .animation-delay-4000 { animation-delay: 4s; }
+
+    /* Custom Soft Scrollbar */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(216, 180, 254, 0.5); border-radius: 20px; border: 2px solid transparent; background-clip: content-box; }
+    ::-webkit-scrollbar-thumb:hover { background-color: rgba(192, 132, 252, 0.8); }
+
+    /* 3D Perspective container */
+    .perspective-grid { perspective: 1200px; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-pink-300 selection:text-pink-900 relative overflow-x-hidden">
+
+  <!-- Ambient 3D Background Orbs (Creates the depth illusion) -->
+  <div class="fixed top-[-10%] left-[-10%] w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-[128px] opacity-70 animate-blob z-[-1]"></div>
+  <div class="fixed top-[20%] right-[-10%] w-[30rem] h-[30rem] bg-pink-300 rounded-full mix-blend-multiply filter blur-[128px] opacity-60 animate-blob animation-delay-2000 z-[-1]"></div>
+  <div class="fixed bottom-[-20%] left-[20%] w-[40rem] h-[40rem] bg-teal-200 rounded-full mix-blend-multiply filter blur-[140px] opacity-60 animate-blob animation-delay-4000 z-[-1]"></div>
+
+  <!-- Top Navigation Bar (Thick 3D Glass) -->
+  <nav class="bg-white/40 backdrop-blur-xl border-b border-white/60 sticky top-0 z-30 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-24 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <!-- 3D Icon Box -->
+        <div class="bg-gradient-to-br from-pink-300 to-purple-400 p-3 rounded-2xl text-white shadow-[0_10px_20px_-5px_rgba(192,132,252,0.5),inset_0_2px_4px_rgba(255,255,255,0.5)] transform hover:rotate-12 transition-transform duration-300">
+          <i data-lucide="sparkles" class="w-7 h-7"></i>
+        </div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 drop-shadow-sm">
+          Virexa
+        </h1>
+      </div>
+      
+      <!-- 3D Tactile Button -->
+      <button onclick="openModal()" class="flex items-center gap-2 bg-gradient-to-b from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white px-6 py-3.5 rounded-full font-bold transition-all shadow-[0_15px_25px_-5px_rgba(236,72,153,0.4),inset_0_2px_2px_rgba(255,255,255,0.4)] hover:shadow-[0_20px_30px_-5px_rgba(236,72,153,0.6)] hover:-translate-y-1 active:translate-y-0.5 active:shadow-[0_5px_10px_-5px_rgba(236,72,153,0.4)]">
+        <i data-lucide="plus" class="w-5 h-5"></i>
+        <span class="hidden sm:inline">Upload Art</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden flex-col items-center justify-center py-24 px-4 text-center">
+      <div class="w-48 h-48 bg-white/40 backdrop-blur-xl rounded-[3rem] flex items-center justify-center mb-10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1),inset_0_4px_10px_rgba(255,255,255,0.8)] relative border border-white/80 transform-gpu hover:scale-105 transition-transform duration-500">
+        <i data-lucide="image" class="w-24 h-24 text-pink-400/80 absolute -ml-10 mb-8 transform -rotate-12 drop-shadow-lg"></i>
+        <i data-lucide="star" class="w-20 h-20 text-purple-400/80 absolute ml-16 mt-12 transform rotate-12 drop-shadow-lg"></i>
+      </div>
+      <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 mb-4 drop-shadow-sm">Your canvas awaits</h2>
+      <p class="text-slate-600 max-w-lg mb-12 text-xl font-medium">
+        Step into the gallery. Upload your photos and videos to bring them to life with 3D depth.
+      </p>
+      <button onclick="openModal()" class="flex items-center gap-3 bg-white/60 backdrop-blur-lg border-2 border-pink-300/50 text-pink-600 hover:bg-white hover:border-pink-400 px-10 py-5 rounded-3xl font-extrabold text-lg transition-all shadow-[0_20px_40px_-10px_rgba(236,72,153,0.2)] hover:-translate-y-1">
+        <i data-lucide="upload" class="w-6 h-6"></i> Enter Gallery
+      </button>
+    </div>
+
+    <!-- Media Gallery -->
+    <div id="gallery-container" class="hidden space-y-10 perspective-grid">
+      <div class="flex items-center justify-between">
+        <h2 class="text-3xl font-extrabold text-slate-800 flex items-center gap-3 drop-shadow-sm">
+          Gallery 
+          <span id="upload-count" class="bg-gradient-to-br from-purple-200 to-pink-200 text-purple-800 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)] border border-white/50 text-lg py-1 px-4 rounded-full">0</span>
+        </h2>
+      </div>
+      
+      <!-- GRID UPDATED: Fewer columns = much larger images on desktop -->
+      <div id="media-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 sm:gap-10">
+        <!-- Media Cards injected via JS -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Upload Modal (3D Popup) -->
+  <div id="upload-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 sm:p-6 perspective-grid">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity" onclick="closeModal()"></div>
+    
+    <!-- Modal Content -->
+    <div class="relative bg-white/80 backdrop-blur-2xl border border-white/80 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3),inset_0_2px_10px_rgba(255,255,255,1)] w-full max-w-2xl overflow-hidden fade-in">
+      <div class="flex items-center justify-between px-10 py-8 border-b border-white/40">
+        <h3 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600">Summon Media</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-pink-500 bg-white/50 hover:bg-white p-3 rounded-2xl shadow-sm border border-transparent hover:border-pink-100 transition-all hover:scale-110 active:scale-95">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+      
+      <div class="p-10">
+        <!-- 3D Drop Zone -->
+        <div id="drop-zone" class="relative bg-white/30 backdrop-blur-md border-4 border-dashed border-purple-200/80 rounded-[2.5rem] p-10 sm:p-16 flex flex-col items-center justify-center text-center cursor-pointer transition-all hover:border-pink-400 hover:bg-pink-50/40 shadow-[inset_0_10px_20px_rgba(0,0,0,0.03)] hover:shadow-[inset_0_10px_20px_rgba(236,72,153,0.05)] transform-gpu hover:-translate-y-1" onclick="document.getElementById('file-input').click()">
+          <input type="file" id="file-input" class="hidden" multiple accept="image/*,video/*" onchange="handleFileInput(event)">
+          
+          <div id="drop-icon-container" class="w-24 h-24 rounded-[2rem] flex items-center justify-center mb-8 bg-gradient-to-br from-white to-pink-50 shadow-[0_15px_30px_-10px_rgba(236,72,153,0.3),inset_0_2px_5px_rgba(255,255,255,1)] transition-transform duration-300">
+            <i data-lucide="cloud-upload" class="w-12 h-12 text-purple-500 drop-shadow-md"></i>
+          </div>
+          <h4 class="text-2xl font-black text-slate-700 mb-3">Drop into the void</h4>
+          <p class="text-base text-slate-500 mb-8 font-medium">or click to browse your dimension</p>
+          
+          <div class="flex items-center gap-5 text-sm font-bold text-purple-500 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full shadow-[0_5px_15px_-3px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,1)] border border-white">
+            <span class="flex items-center gap-2"><i data-lucide="image" class="w-5 h-5"></i> Images</span>
+            <div class="w-1.5 h-1.5 bg-purple-300 rounded-full shadow-inner"></div>
+            <span class="flex items-center gap-2"><i data-lucide="film" class="w-5 h-5"></i> Videos</span>
+          </div>
+        </div>
+
+        <div id="error-msg" class="hidden mt-6 p-5 bg-rose-50/80 backdrop-blur-md text-rose-600 text-sm rounded-2xl flex items-center gap-3 border border-rose-200 shadow-sm">
+          <i data-lucide="alert-circle" class="w-6 h-6 flex-shrink-0"></i>
+          <span id="error-text" class="font-bold text-base"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox Modal for Full Screen Image/Video Viewing -->
+  <div id="lightbox" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 sm:p-8 bg-slate-900/90 backdrop-blur-xl transition-opacity duration-300 opacity-0" onclick="closeLightbox()">
+    <button onclick="closeLightbox()" class="absolute top-6 right-6 sm:top-8 sm:right-8 text-white/60 hover:text-white bg-white/10 hover:bg-white/20 p-3 rounded-full transition-all backdrop-blur-md z-10 hover:scale-110 active:scale-95">
+      <i data-lucide="x" class="w-6 h-6"></i>
+    </button>
+    <div class="relative w-full max-w-6xl max-h-[90vh] flex items-center justify-center transform-gpu transition-transform duration-300 scale-95" id="lightbox-scale-container" onclick="event.stopPropagation()">
+      <div id="lightbox-content" class="w-full h-full flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl shadow-purple-900/40"></div>
+    </div>
+  </div>
+
+  <!-- Application Logic (Vanilla JS + Firebase) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    let activeUploads = [];
+    let dbUploads = [];
+    let currentUser = null;
+    
+    let app, auth, db, appId;
+    try {
+      const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+      appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    } catch (e) {
+      console.error("Database init failed", e);
+    }
+
+    lucide.createIcons();
+
+    async function initAuth() {
+      if (!auth) return;
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (e) { console.error("Auth error", e); }
+    }
+    
+    if (auth) {
+      initAuth();
+      onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user && db) {
+          const uploadsRef = collection(db, 'artifacts', appId, 'users', user.uid, 'uploads');
+          onSnapshot(uploadsRef, (snapshot) => {
+            const fetched = [];
+            snapshot.forEach(doc => {
+              fetched.push({ ...doc.data(), id: doc.id });
+            });
+            fetched.sort((a, b) => b.createdAt - a.createdAt);
+            dbUploads = fetched;
+            renderGallery();
+          }, (err) => console.error("Database error:", err));
+        }
+      });
+    }
+
+    window.openModal = () => {
+      document.getElementById('upload-modal').classList.remove('hidden');
+      document.getElementById('upload-modal').classList.add('flex');
+    };
+
+    window.closeModal = () => {
+      document.getElementById('upload-modal').classList.add('hidden');
+      document.getElementById('upload-modal').classList.remove('flex');
+      document.getElementById('error-msg').classList.add('hidden');
+    };
+
+    window.openLightbox = (url, type) => {
+      const lightbox = document.getElementById('lightbox');
+      const content = document.getElementById('lightbox-content');
+      const scaleContainer = document.getElementById('lightbox-scale-container');
+      
+      if (type === 'image') {
+        content.innerHTML = `<img src="${url}" class="max-w-full max-h-[90vh] object-contain rounded-2xl" />`;
+      } else {
+        content.innerHTML = `<video src="${url}" class="max-w-full max-h-[90vh] object-contain rounded-2xl" controls autoplay></video>`;
+      }
+      
+      lightbox.classList.remove('hidden');
+      lightbox.classList.add('flex');
+      
+      // Trigger animation frame for smooth fade-in
+      requestAnimationFrame(() => {
+        lightbox.classList.remove('opacity-0');
+        lightbox.classList.add('opacity-100');
+        scaleContainer.classList.remove('scale-95');
+        scaleContainer.classList.add('scale-100');
+      });
+    };
+
+    window.closeLightbox = () => {
+      const lightbox = document.getElementById('lightbox');
+      const scaleContainer = document.getElementById('lightbox-scale-container');
+      
+      lightbox.classList.remove('opacity-100');
+      lightbox.classList.add('opacity-0');
+      scaleContainer.classList.remove('scale-100');
+      scaleContainer.classList.add('scale-95');
+      
+      setTimeout(() => {
+        lightbox.classList.remove('flex');
+        lightbox.classList.add('hidden');
+        document.getElementById('lightbox-content').innerHTML = ''; 
+      }, 300);
+    };
+
+    function showError(msg) {
+      document.getElementById('error-text').innerText = msg;
+      document.getElementById('error-msg').classList.remove('hidden');
+    }
+
+    const dropZone = document.getElementById('drop-zone');
+    const dropIconContainer = document.getElementById('drop-icon-container');
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-pink-400', 'bg-pink-50/60', 'scale-[1.02]');
+      dropZone.classList.remove('border-purple-200/80');
+      dropIconContainer.classList.add('scale-110');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-pink-400', 'bg-pink-50/60', 'scale-[1.02]');
+      dropZone.classList.add('border-purple-200/80');
+      dropIconContainer.classList.remove('scale-110');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-pink-400', 'bg-pink-50/60', 'scale-[1.02]');
+      dropZone.classList.add('border-purple-200/80');
+      dropIconContainer.classList.remove('scale-110');
+      document.getElementById('error-msg').classList.add('hidden');
+      
+      const files = Array.from(e.dataTransfer.files);
+      processFiles(files);
+    });
+
+    window.handleFileInput = (e) => {
+      document.getElementById('error-msg').classList.add('hidden');
+      const files = Array.from(e.target.files);
+      processFiles(files);
+      e.target.value = ''; 
+    };
+
+    function processFiles(files) {
+      const validFiles = files.filter(file => file.type.startsWith('image/') || file.type.startsWith('video/'));
+      
+      if (validFiles.length === 0) {
+        showError("Oops! Only images and videos can enter this dimension.");
+        return;
+      }
+
+      const newUploadObjects = validFiles.map(file => ({
+        id: crypto.randomUUID(),
+        file: file,
+        name: file.name,
+        type: file.type.startsWith('image/') ? 'image' : 'video',
+        size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+        status: 'uploading',
+        progress: 0,
+        url: URL.createObjectURL(file), 
+        createdAt: Date.now()
+      }));
+
+      activeUploads = [...newUploadObjects, ...activeUploads];
+      window.closeModal();
+      renderGallery();
+
+      newUploadObjects.forEach(uploadObj => uploadToCloudinary(uploadObj));
+    }
+
+    function uploadToCloudinary(uploadObj) {
+      const cloudName = 'dpr3qarss'; 
+      const uploadPreset = 'website_uploads'; 
+
+      const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+      const formData = new FormData();
+      formData.append('file', uploadObj.file);
+      formData.append('upload_preset', uploadPreset);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url, true);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const progress = Math.round((e.loaded / e.total) * 100);
+          const index = activeUploads.findIndex(item => item.id === uploadObj.id);
+          if (index !== -1) {
+            activeUploads[index].progress = progress;
+            renderGallery(); 
+          }
+        }
+      };
+
+      xhr.onload = async () => {
+        if (xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText);
+          activeUploads = activeUploads.filter(item => item.id !== uploadObj.id);
+
+          if (currentUser && db) {
+            const finalData = {
+              id: uploadObj.id,
+              name: uploadObj.name,
+              type: uploadObj.type,
+              size: uploadObj.size,
+              status: 'complete',
+              progress: 100,
+              url: response.secure_url,
+              createdAt: uploadObj.createdAt
+            };
+            await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'uploads', uploadObj.id), finalData);
+          }
+        } else {
+          console.error("Upload failed:", xhr.responseText);
+        }
+      };
+
+      xhr.onerror = () => console.error("Network error during upload");
+      xhr.send(formData);
+    }
+
+    window.removeMedia = async (id, event) => {
+      event.stopPropagation();
+      activeUploads = activeUploads.filter(item => item.id !== id);
+      renderGallery();
+      if (currentUser && db) {
+        await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'uploads', id));
+      }
+    };
+
+    window.copyUrl = (url, btnElement, event) => {
+      event.stopPropagation();
+      
+      const tempInput = document.createElement('input');
+      tempInput.value = url;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+
+      const originalHtml = btnElement.innerHTML;
+      btnElement.innerHTML = `<i data-lucide="check-circle-2" class="w-5 h-5"></i> Copied!`;
+      btnElement.classList.remove('bg-white/90', 'text-slate-800');
+      btnElement.classList.add('bg-gradient-to-r', 'from-pink-500', 'to-purple-500', 'text-white', 'border-transparent');
+      lucide.createIcons();
+
+      setTimeout(() => {
+        btnElement.innerHTML = originalHtml;
+        btnElement.classList.add('bg-white/90', 'text-slate-800');
+        btnElement.classList.remove('bg-gradient-to-r', 'from-pink-500', 'to-purple-500', 'text-white', 'border-transparent');
+        lucide.createIcons();
+      }, 2000);
+    };
+
+    function renderGallery() {
+      const allUploads = [...activeUploads, ...dbUploads].sort((a, b) => b.createdAt - a.createdAt);
+      
+      const emptyState = document.getElementById('empty-state');
+      const galleryContainer = document.getElementById('gallery-container');
+      const mediaGrid = document.getElementById('media-grid');
+      const uploadCount = document.getElementById('upload-count');
+
+      if (allUploads.length === 0) {
+        emptyState.classList.remove('hidden');
+        emptyState.classList.add('flex');
+        galleryContainer.classList.add('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        emptyState.classList.remove('flex');
+        galleryContainer.classList.remove('hidden');
+        
+        uploadCount.innerText = allUploads.length;
+        mediaGrid.innerHTML = ''; 
+
+        allUploads.forEach(upload => {
+          const card = document.createElement('div');
+          // MUCH SUBTLER 3D UPDATE: Softer shadow, minimal pop-out on hover (-translate-y-1 instead of -3)
+          card.className = "group relative bg-white/60 backdrop-blur-xl rounded-3xl shadow-sm border border-white/60 overflow-hidden aspect-square hover:shadow-xl hover:shadow-purple-500/10 hover:-translate-y-1 transition-all duration-300 transform-gpu cursor-pointer";
+          
+          let mediaHtml = '';
+          if (upload.type === 'image') {
+            mediaHtml = `<img src="${upload.url}" alt="User Upload" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onclick="openLightbox('${upload.url}', 'image')" />`;
+          } else {
+            mediaHtml = `
+              <video src="${upload.url}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()" onclick="openLightbox('${upload.url}', 'video')"></video>
+              <div class="absolute top-4 left-4 bg-white/80 backdrop-blur-md text-purple-600 p-2.5 rounded-xl shadow-sm border border-white pointer-events-none">
+                <i data-lucide="film" class="w-5 h-5"></i>
+              </div>`;
+          }
+
+          let overlayHtml = '';
+          if (upload.status === 'uploading') {
+            overlayHtml = `
+              <div class="absolute inset-0 bg-white/80 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center pointer-events-none">
+                <i data-lucide="loader-2" class="w-10 h-10 text-pink-500 animate-spin mb-4 drop-shadow-sm"></i>
+                <p class="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 mb-3">Materializing...</p>
+                <div class="w-full bg-purple-100 rounded-full h-2 overflow-hidden shadow-inner">
+                  <div class="bg-gradient-to-r from-purple-400 to-pink-500 h-2 rounded-full transition-all duration-300" style="width: ${upload.progress}%"></div>
+                </div>
+              </div>`;
+          } else {
+            // UI MATCHING SCREENSHOTS: Clean pills, dark semi-transparent overlays, subtle hovers
+            overlayHtml = `
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 pointer-events-none">
+                
+                <div class="pointer-events-auto flex flex-col gap-3">
+                  <div class="flex justify-between items-end gap-2">
+                    <div class="bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full text-white/90 shadow-sm">
+                      <p class="text-[11px] font-bold tracking-wide">${upload.size}</p>
+                    </div>
+                    
+                    <button onclick="removeMedia('${upload.id}', event)" class="text-white/80 hover:text-rose-400 bg-black/40 hover:bg-black/60 p-2.5 rounded-xl transition-all backdrop-blur-md shadow-sm active:scale-95" title="Delete Art">
+                      <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <button onclick="copyUrl('${upload.url}', this, event)" class="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-sm font-semibold transition-all backdrop-blur-md bg-slate-100 text-slate-800 hover:bg-white shadow-sm active:scale-95">
+                      <i data-lucide="copy" class="w-4 h-4"></i> Copy
+                    </button>
+                    <button onclick="openLightbox('${upload.url}', '${upload.type}'); event.stopPropagation();" class="flex items-center justify-center gap-1.5 py-2.5 px-2 bg-[#9353d3] hover:bg-[#8042c2] text-white rounded-xl text-sm font-semibold transition-all shadow-sm active:scale-95">
+                      <i data-lucide="external-link" class="w-4 h-4"></i> Open
+                    </button>
+                  </div>
+                </div>
+              </div>`;
+          }
+
+          card.innerHTML = `
+            <div class="w-full h-full bg-slate-100 relative">
+              ${mediaHtml}
+            </div>
+            ${overlayHtml}
+          `;
+          
+          mediaGrid.appendChild(card);
+        });
+      }
+
+      lucide.createIcons();
+    }
+
+    renderGallery();
+
+  </script>
+</body>
+</html>
