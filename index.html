@@ -60,7 +60,7 @@
       
       <button onclick="openModal()" class="flex items-center gap-2 bg-gradient-to-b from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white px-6 py-3.5 rounded-full font-bold transition-all shadow-[0_15px_25px_-5px_rgba(236,72,153,0.4),inset_0_2px_2px_rgba(255,255,255,0.4)] hover:shadow-[0_20px_30px_-5px_rgba(236,72,153,0.6)] hover:-translate-y-1 active:translate-y-0.5 active:shadow-[0_5px_10px_-5px_rgba(236,72,153,0.4)]">
         <i data-lucide="plus" class="w-5 h-5"></i>
-        <span class="hidden sm:inline">Media Upload Karein</span>
+        <span class="hidden sm:inline">Upload Media</span>
       </button>
     </div>
   </nav>
@@ -74,12 +74,12 @@
         <i data-lucide="image" class="w-24 h-24 text-pink-400/80 absolute -ml-10 mb-8 transform -rotate-12 drop-shadow-lg"></i>
         <i data-lucide="star" class="w-20 h-20 text-purple-400/80 absolute ml-16 mt-12 transform rotate-12 drop-shadow-lg"></i>
       </div>
-      <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 mb-4 drop-shadow-sm">Aapki Gallery Khali Hai</h2>
+      <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 mb-4 drop-shadow-sm">Your canvas awaits</h2>
       <p class="text-slate-600 max-w-lg mb-12 text-xl font-medium">
-        Apni photos aur videos upload karein taki wo hamesha ke liye Cloudinary par save ho jayein.
+        Upload your photos and videos to bring them to life with 3D depth.
       </p>
       <button onclick="openModal()" class="flex items-center gap-3 bg-white/60 backdrop-blur-lg border-2 border-pink-300/50 text-pink-600 hover:bg-white hover:border-pink-400 px-10 py-5 rounded-3xl font-extrabold text-lg transition-all shadow-[0_20px_40px_-10px_rgba(236,72,153,0.2)] hover:-translate-y-1">
-        <i data-lucide="upload" class="w-6 h-6"></i> Upload Shuru Karein
+        <i data-lucide="upload" class="w-6 h-6"></i> Enter Gallery
       </button>
     </div>
 
@@ -108,7 +108,7 @@
     
     <div class="relative bg-white/80 backdrop-blur-2xl border border-white/80 rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3),inset_0_2px_10px_rgba(255,255,255,1)] w-full max-w-2xl overflow-hidden fade-in">
       <div class="flex items-center justify-between px-10 py-8 border-b border-white/40">
-        <h3 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600">Media Chunein</h3>
+        <h3 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600">Select Media</h3>
         <button onclick="closeModal()" class="text-slate-400 hover:text-pink-500 bg-white/50 hover:bg-white p-3 rounded-2xl shadow-sm border border-transparent hover:border-pink-100 transition-all hover:scale-110 active:scale-95">
           <i data-lucide="x" class="w-6 h-6"></i>
         </button>
@@ -121,8 +121,8 @@
           <div id="drop-icon-container" class="w-24 h-24 rounded-[2rem] flex items-center justify-center mb-8 bg-gradient-to-br from-white to-pink-50 shadow-[0_15px_30px_-10px_rgba(236,72,153,0.3),inset_0_2px_5px_rgba(255,255,255,1)] transition-transform duration-300">
             <i data-lucide="cloud-upload" class="w-12 h-12 text-purple-500 drop-shadow-md"></i>
           </div>
-          <h4 class="text-2xl font-black text-slate-700 mb-3">Files Yaha Drop Karein</h4>
-          <p class="text-base text-slate-500 mb-8 font-medium">ya yaha click karke select karein</p>
+          <h4 class="text-2xl font-black text-slate-700 mb-3">Drop files here</h4>
+          <p class="text-base text-slate-500 mb-8 font-medium">or click to browse your files</p>
           
           <div class="flex items-center gap-5 text-sm font-bold text-purple-500 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full shadow-[0_5px_15px_-3px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,1)] border border-white">
             <span class="flex items-center gap-2"><i data-lucide="image" class="w-5 h-5"></i> Images</span>
@@ -153,13 +153,13 @@
   <script type="text/javascript">
     const CLOUD_NAME = 'dpr3qarss'; 
     const UPLOAD_PRESET = 'website_uploads'; 
-    const APP_TAG = 'virexa_gallery'; // Is tag ki madad se hum images filter karke layenge
+    const APP_TAG = 'virexa_gallery'; // Tag to easily filter and fetch images
 
     let activeUploads = [];
     let cloudUploads = [];
     
-    // Cloudinary frontend se images delete nahi karne deta (security ke liye), 
-    // toh hum deleted images ko browser ke storage me hide kar denge
+    // Cloudinary frontend doesn't allow direct deletion (for security), 
+    // so we hide deleted images using browser storage
     let deletedIds = JSON.parse(localStorage.getItem('virexa_deleted_ids') || '[]');
 
     lucide.createIcons();
@@ -192,32 +192,17 @@
           });
         }
 
-        if (vidRes && vidRes.ok) {
-          const vidData = await vidRes.json();
-          vidData.resources.forEach(res => {
-            fetchedMedia.push({
-              id: res.public_id,
-              name: res.public_id.split('/').pop() + '.' + res.format,
-              type: 'video',
-              url: `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/v${res.version}/${res.public_id}.${res.format}`,
-              size: 'Cloud Media',
-              createdAt: new Date(res.created_at).getTime(),
-              status: 'complete'
-            });
-          });
-        }
-
-        // Deleted images ko hide karo aur time ke hisaab se sort karo
+        // Hide deleted images and sort by time
         cloudUploads = fetchedMedia.filter(item => !deletedIds.includes(item.id));
         cloudUploads.sort((a, b) => b.createdAt - a.createdAt);
         renderGallery();
 
       } catch (error) {
-        console.error("Cloudinary se images lane me problem aayi. Kya aapne 'Resource list' setting on ki hai?", error);
+        console.error("Problem fetching images from Cloudinary. Did you enable the 'Resource list' setting?", error);
       }
     }
 
-    // Pehli baar website khulte hi Cloudinary se images lao
+    // Fetch images from Cloudinary when the website loads for the first time
     loadCloudGallery();
 
     window.openModal = () => {
@@ -313,7 +298,7 @@
       const validFiles = files.filter(file => file.type.startsWith('image/') || file.type.startsWith('video/'));
       
       if (validFiles.length === 0) {
-        showError("Oops! Sirf images aur videos hi allow hain.");
+        showError("Oops! Only images and videos are allowed.");
         return;
       }
 
@@ -341,7 +326,7 @@
       const formData = new FormData();
       formData.append('file', uploadObj.file);
       formData.append('upload_preset', UPLOAD_PRESET);
-      // 🔥 YEH BAHUT ZAROORI HAI: Hum image ko ek tag de rahe hain taki fetch karte waqt aasaani ho
+      // 🔥 VERY IMPORTANT: We assign a tag to easily fetch it later
       formData.append('tags', APP_TAG); 
 
       const xhr = new XMLHttpRequest();
@@ -362,13 +347,13 @@
         if (xhr.status === 200) {
           const response = JSON.parse(xhr.responseText);
           
-          // Image upload hone ke baad usko cloud list me daal do
+          // After upload, add it to the cloud list
           const index = activeUploads.findIndex(item => item.id === uploadObj.id);
           if (index !== -1) {
             let completedItem = activeUploads[index];
             completedItem.status = 'complete';
             completedItem.url = response.secure_url;
-            completedItem.id = response.public_id; // Cloudinary ID use karenge aage se
+            completedItem.id = response.public_id; // Use Cloudinary ID from now on
             
             activeUploads = activeUploads.filter(item => item.id !== uploadObj.id);
             cloudUploads.unshift(completedItem);
@@ -386,11 +371,11 @@
     window.removeMedia = (id, event) => {
       event.stopPropagation();
       
-      // UI se hatao
+      // Remove from UI
       activeUploads = activeUploads.filter(item => item.id !== id);
       cloudUploads = cloudUploads.filter(item => item.id !== id);
       
-      // Local storage me note karlo ki yeh file hide karni hai
+      // Note in local storage that this file should be hidden
       deletedIds.push(id);
       localStorage.setItem('virexa_deleted_ids', JSON.stringify(deletedIds));
       
@@ -422,7 +407,7 @@
     };
 
     function renderGallery() {
-      // Active (Upload ho rahi) aur Cloud (Upload ho chuki) dono files dikhao
+      // Show both active and cloud files
       const allUploads = [...activeUploads, ...cloudUploads];
       
       const emptyState = document.getElementById('empty-state');
@@ -462,7 +447,7 @@
             overlayHtml = `
               <div class="absolute inset-0 bg-white/80 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center pointer-events-none">
                 <i data-lucide="loader-2" class="w-10 h-10 text-pink-500 animate-spin mb-4 drop-shadow-sm"></i>
-                <p class="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 mb-3">Upload ho raha hai...</p>
+                <p class="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600 mb-3">Uploading...</p>
                 <div class="w-full bg-purple-100 rounded-full h-2 overflow-hidden shadow-inner">
                   <div class="bg-gradient-to-r from-purple-400 to-pink-500 h-2 rounded-full transition-all duration-300" style="width: ${upload.progress}%"></div>
                 </div>
@@ -477,7 +462,7 @@
                       <p class="text-[11px] font-bold tracking-wide">${upload.size}</p>
                     </div>
                     
-                    <button onclick="removeMedia('${upload.id}', event)" class="text-white/80 hover:text-rose-400 bg-black/40 hover:bg-black/60 p-2.5 rounded-xl transition-all backdrop-blur-md shadow-sm active:scale-95" title="Hata dein">
+                    <button onclick="removeMedia('${upload.id}', event)" class="text-white/80 hover:text-rose-400 bg-black/40 hover:bg-black/60 p-2.5 rounded-xl transition-all backdrop-blur-md shadow-sm active:scale-95" title="Delete Media">
                       <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
                   </div>
@@ -487,7 +472,7 @@
                       <i data-lucide="copy" class="w-4 h-4"></i> Copy
                     </button>
                     <button onclick="openLightbox('${upload.url}', '${upload.type}'); event.stopPropagation();" class="flex items-center justify-center gap-1.5 py-2.5 px-2 bg-[#9353d3] hover:bg-[#8042c2] text-white rounded-xl text-sm font-semibold transition-all shadow-sm active:scale-95">
-                      <i data-lucide="external-link" class="w-4 h-4"></i> Kholein
+                      <i data-lucide="external-link" class="w-4 h-4"></i> Open
                     </button>
                   </div>
                 </div>
