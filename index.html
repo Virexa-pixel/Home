@@ -221,7 +221,8 @@
       onAuthStateChanged(auth, (user) => {
         currentUser = user;
         if (user && db) {
-          const uploadsRef = collection(db, 'artifacts', appId, 'users', user.uid, 'uploads');
+          // CHANGED TO PUBLIC PATH: Now all your devices will see the same photos!
+          const uploadsRef = collection(db, 'artifacts', appId, 'public', 'data', 'uploads');
           onSnapshot(uploadsRef, (snapshot) => {
             const fetched = [];
             snapshot.forEach(doc => {
@@ -391,7 +392,8 @@
               url: response.secure_url,
               createdAt: uploadObj.createdAt
             };
-            await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'uploads', uploadObj.id), finalData);
+            // CHANGED TO PUBLIC PATH
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'uploads', uploadObj.id), finalData);
           }
         } else {
           console.error("Upload failed:", xhr.responseText);
@@ -407,7 +409,8 @@
       activeUploads = activeUploads.filter(item => item.id !== id);
       renderGallery();
       if (currentUser && db) {
-        await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'uploads', id));
+        // CHANGED TO PUBLIC PATH
+        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'uploads', id));
       }
     };
 
